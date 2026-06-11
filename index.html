@@ -1,23 +1,84 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <title>HTML</title>
-  
-  <!-- HTML -->
-  
-
-  <!-- Custom Styles -->
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temperature Visualization</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .chart-container {
+            width: 90%;
+            max-width: 800px;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            text-align: center;
+            color: #333333;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
-
 <body>
-  <h1>Nothing to see here viyas...</h1>
-  <!-- Project -->
-  <script src="main.js"></script>
+
+    <div class="chart-container">
+        <h2>Motherboard Thermal Sensor Readings</h2>
+        <canvas id="temperatureChart"></canvas>
+    </div>
+    
+    <script>
+        const ctx = document.getElementById('temperatureChart').getContext('2d');
+
+        const chartData = {
+            labels: ['0 mins', '10 mins', '20 mins', '30 mins', '40 mins', '50 mins', '60 mins'],
+            datasets: [{
+                label: 'Component Temp (°C)',
+                data: [42, 45, 55, 72, 85, 88, 81],
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderWidth: 2,
+                pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+                tension: 0.4, 
+                fill: true 
+            }]
+        };
+
+        const temperatureChart = new Chart(ctx, {
+            type: 'line',
+            data: chartData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: {
+                        enabled: true,
+                        mode: 'index',
+                        intersect: false,
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: { display: true, text: 'Temperature (°C)' }
+                    },
+                    x: {
+                        title: { display: true, text: 'Uptime' }
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 </html>
