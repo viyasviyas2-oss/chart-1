@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Voltage Monitor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace; /* Gives it a technical, machine-like feel */
+            background-color: #0d1117; /* Deep GitHub dark mode color */
+            color: #c9d1d9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+
+        .monitor-frame {
+            width: 100%;
+            max-width: 800px;
+            background-color: #161b22;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.1);
+        }
+
+        .header-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: #58a6ff;
+            text-transform: uppercase;
+        }
+
+        /* The Status Alert Badge */
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            background-color: #238636; /* Default Green */
+            color: #ffffff;
+            transition: background-color 0.3s ease;
+        }
+
+        .status-badge.warning {
+            background-color: #da3633; /* Alert Red */
+            animation: flash 1s infinite;
+        }
+
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .canvas-container {
+            position: relative;
+            height: 40vh;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="monitor-frame">
+        <div class="header-panel">
+            <h2>Transistor Voltage Diagnostic</h2>
+            <div id="systemStatus" class="status-badge">SYSTEM STABLE</div>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="realTimeChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('realTimeChart').getContext('2d');
+        const statusBadge = document.getElementById('systemStatus');
+
+        // Setup a fast-moving array for the X-axis (showing only the last 30 readings)
+        const maxDataPoints = 30;
+        let timeLabels = Array(maxDataPoints).fill('');
+        let voltageData = Array(maxDataPoints).fill(3.3); // Baseline voltage of 3.3V
+
+        // Chart Configuration
+        const liveVoltageChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timeLabels,
+                datasets: [{
+                    label: 'Voltage (V)',
+                    data: voltageData,
+                    borderColor: '#2ea043', // GitHub Success Green
+                    borderWidth: 2,
+                    pointRadius: 0, // Removes dots entirely so it looks like an oscilloscope line
+                    tension: 0.1, // Very jagged, raw data look
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 0 // Turns off default animation so the 500ms updates are instant and snappy
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: false } // Too fast for tooltips to be useful
+                },
+                scales: {
+                    y: {
+                        min: 2.0,
+                        max: 5.0,
+                        grid: { color: '#30363d' },
+                        ticks: { color: '#8b949e' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { display: false } // Hide the X-axis text since it moves too fast to read anyway
+                    }
+                }
+            }
+        });
+
+        // The High-Speed Streaming Logic
+        setInterval(() => {
+            // Simulate a baseline 3.3V current with slight normal noise
+            let newVoltage = 3.3 + (Math.random() * 0.4 - 0.2);
+
+            // Simulate a random "failure spike" every so often to trigger the warning
+            if (Math.random() > 0.9) {
+                newVoltage = 4.5 + Math.random() * 0.5; // Spike up to ~5.0V
+            }
+
+            // Update Arrays
+            liveVoltageChart.data.labels.push('');
+            liveVoltageChart.data.labels.shift();
+            liveVoltageChart.data.datasets[0].data.push(newVoltage);
+            liveVoltageChart.data.datasets[0].data.shift();
+
+            // Dynamic Alert Logic
+            if (newVoltage > 4.2) {
+                // If voltage spikes dangerously, turn the line and badge red
+                liveVoltageChart.data.datasets[0].borderColor = '#da3633';
+                statusBadge.textContent = 'VOLTAGE ANOMALY';
+                statusBadge.classList.add('warning');
+            } else {
+                // Return to normal green
+                liveVoltageChart.data.datasets[0].borderColor = '#2ea043';
+                statusBadge.textContent = 'SYSTEM STABLE';
+                statusBadge.classList.remove('warning');
+            }
+
+            liveVoltageChart.update();
+            
+        }, 500); // Updates every half-second!
+    </script>
+</body>
+</html>
