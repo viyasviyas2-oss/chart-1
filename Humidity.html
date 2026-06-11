@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Humidity Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* Advanced Dark Theme Styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .dashboard-card {
+            width: 95%;
+            max-width: 850px;
+            background: linear-gradient(145deg, #1e1e24, #17171c);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            border: 1px solid #2a2a35;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 15px;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: #00d2ff; /* Neon Blue */
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* The Live Digital Readout */
+        .live-readout {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .live-indicator {
+            width: 12px;
+            height: 12px;
+            background-color: #ff3b30;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 59, 48, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-card">
+        <div class="header">
+            <h2>Ambient Humidity Monitor</h2>
+            <div class="live-readout">
+                <div class="live-indicator"></div>
+                <span id="currentHumidity">45%</span>
+            </div>
+        </div>
+        <canvas id="humidityChart"></canvas>
+    </div>
+
+    <script>
+        // 1. Setup Initial Data Arrays (Holding 15 data points at a time)
+        const maxDataPoints = 15;
+        let timeLabels = Array(maxDataPoints).fill('');
+        let humidityData = Array(maxDataPoints).fill(45); // Start at a baseline of 45%
+
+        // 2. Target the canvas
+        const ctx = document.getElementById('humidityChart').getContext('2d');
+
+        // 3. Configure the Advanced Chart
+        const liveChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timeLabels,
+                datasets: [{
+                    label: 'Relative Humidity (%)',
+                    data: humidityData,
+                    borderColor: '#00d2ff', // Neon Blue line
+                    backgroundColor: 'rgba(0, 210, 255, 0.1)', // Very transparent blue fill
+                    borderWidth: 3,
+                    pointRadius: 0, // Hide dots for a cleaner "heartbeat" monitor look
+                    tension: 0.3, // Slight curve, but mostly precise
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                animation: {
+                    duration: 400, // Make the transitions faster for live data
+                    easing: 'linear'
+                },
+                plugins: {
+                    legend: { display: false } // Hide legend for cleaner UI
+                },
+                scales: {
+                    y: {
+                        min: 20, // Lock the scale so the chart doesn't jump wildly
+                        max: 80,
+                        grid: { color: '#333333' }, // Dark grid lines
+                        ticks: { color: '#888' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#888', maxTicksLimit: 7 }
+                    }
+                }
+            }
+        });
+
+        // 4. The Live Update Engine
+        // This function runs automatically every 2000 milliseconds (2 seconds)
+        setInterval(() => {
+            // A. Get the current time for the bottom label
+            const now = new Date();
+            const timeString = now.getHours() + ':' + 
+                               String(now.getMinutes()).padStart(2, '0') + ':' + 
+                               String(now.getSeconds()).padStart(2, '0');
+
+            // B. Generate a random humidity value (Simulating a sensor reading between 40% and 55%)
+            // In a real hardware project, this is where you would fetch data from your actual sensor
+            const newReading = Math.floor(Math.random() * (55 - 40 + 1) + 40);
+
+            // C. Update the large digital text readout on the screen
+            document.getElementById('currentHumidity').innerText = newReading + '%';
+
+            // D. Push new data into the arrays, and shift the oldest data out
+            liveChart.data.labels.push(timeString);    // Add new time to the end
+            liveChart.data.labels.shift();             // Remove oldest time from the front
+
+            liveChart.data.datasets[0].data.push(newReading); // Add new reading
+            liveChart.data.datasets[0].data.shift();          // Remove oldest reading
+
+            // E. Tell Chart.js to redraw with the new data
+            liveChart.update();
+            
+        }, 2000); 
+    </script>
+</body>
+</html>
