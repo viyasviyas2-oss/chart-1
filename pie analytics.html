@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Failure Analysis Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #e9ecef;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .analytics-card {
+            width: 100%;
+            max-width: 600px;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            margin: 0;
+            color: #212529;
+            font-size: 1.5rem;
+        }
+
+        p.description {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 40vh;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="analytics-card">
+        <div class="card-header">
+            <h2>End-of-Life Root Cause Analysis</h2>
+            <p class="description">Distribution of motherboard hardware failures over a 5-year lifespan.</p>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="failurePieChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('failurePieChart').getContext('2d');
+
+        const failurePieChart = new Chart(ctx, {
+            type: 'doughnut', // A modern variation of the Pie Chart
+            data: {
+                labels: [
+                    'Degraded Capacitors', 
+                    'Blown Transistors', 
+                    'Solder Joint Fatigue', 
+                    'IC Overheating', 
+                    'PCB Trace Damage'
+                ],
+                datasets: [{
+                    label: 'Failure Percentage',
+                    data: [40, 25, 15, 12, 8], // The percentages mapping to the labels
+                    backgroundColor: [
+                        '#4facf7', // Blue
+                        '#ff6b6b', // Red
+                        '#feca57', // Yellow
+                        '#ff9f43', // Orange
+                        '#1dd1a1'  // Green
+                    ],
+                    borderColor: '#ffffff', // White borders between the slices
+                    borderWidth: 3,
+                    hoverOffset: 15 // Makes the slice pop out when tapped/hovered!
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%', // Controls how thick the doughnut ring is
+                layout: {
+                    padding: 20 // Gives the hover animation room to expand
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            font: {
+                                size: 13,
+                                family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+                            },
+                            usePointStyle: true, // Turns the color boxes into circles
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(33, 37, 41, 0.9)',
+                        titleFont: { size: 14 },
+                        bodyFont: { size: 14, weight: 'bold' },
+                        padding: 12,
+                        callbacks: {
+                            // This customizes the tooltip to add a "%" sign after the number
+                            label: function(context) {
+                                return ' ' + context.label + ': ' + context.raw + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
