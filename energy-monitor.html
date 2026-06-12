@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energy Monitoring Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a2e; /* Deep space blue/black */
+            color: #e6e6e6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+
+        .energy-card {
+            width: 100%;
+            max-width: 850px;
+            background-color: #16213e;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border-left: 4px solid #0f3460;
+        }
+
+        .header {
+            text-align: left;
+            margin-bottom: 25px;
+        }
+
+        h2 {
+            margin: 0;
+            color: #00ffcc; /* Neon energy green/blue */
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+        }
+
+        p.subtitle {
+            color: #a0a0b0;
+            font-size: 0.95rem;
+            margin-top: 5px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 45vh;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="energy-card">
+        <div class="header">
+            <h2>Power Consumption Breakdown</h2>
+            <p class="subtitle">Real-time watt draw across motherboard power rails (4:30 PM - 10:30 PM)</p>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="energyStackedChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('energyStackedChart').getContext('2d');
+
+        const energyChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['4:30 PM', '6:00 PM', '7:30 PM', '9:00 PM', '10:30 PM'],
+                datasets: [
+                    {
+                        label: '3.3V Rail (Sensors & Logic)',
+                        data: [15, 16, 15, 18, 12],
+                        borderColor: '#e94560',
+                        backgroundColor: 'rgba(233, 69, 96, 0.6)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: '5V Rail (USB & Peripherals)',
+                        data: [25, 30, 28, 35, 20],
+                        borderColor: '#0f3460',
+                        backgroundColor: 'rgba(15, 52, 96, 0.6)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: '12V Rail (CPU & GPU)',
+                        data: [60, 85, 110, 95, 45], // Peaks in the middle of the session
+                        borderColor: '#00ffcc',
+                        backgroundColor: 'rgba(0, 255, 204, 0.4)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: '#e6e6e6',
+                            usePointStyle: true,
+                            boxWidth: 8
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(26, 26, 46, 0.9)',
+                        titleColor: '#00ffcc',
+                        callbacks: {
+                            label: function(context) {
+                                return ` ${context.dataset.label}: ${context.raw}W`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        stacked: true, // This is the magic property for energy charts!
+                        title: {
+                            display: true,
+                            text: 'Total Energy Draw (Watts)',
+                            color: '#a0a0b0'
+                        },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#a0a0b0' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#a0a0b0' }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
