@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Home Dashboard</title>
+    <style>
+        /* --- CSS STYLING --- */
+        :root {
+            --bg-color: #121212;
+            --text-color: #ffffff;
+            --card-bg: #1e1e24;
+            --primary-accent: #00d2ff;
+            --off-color: #555555;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+            color: var(--primary-accent);
+        }
+
+        p.subtitle {
+            color: #aaaaaa;
+            margin-bottom: 40px;
+        }
+
+        /* Grid Layout for Devices */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        /* Device Card */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        /* Glow effect when device is ON */
+        .card.on {
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.2);
+        }
+
+        .icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+            color: var(--off-color);
+            transition: color 0.3s ease;
+        }
+
+        .card.on .icon {
+            color: var(--primary-accent);
+            text-shadow: 0 0 15px var(--primary-accent);
+        }
+
+        h2 {
+            font-size: 20px;
+            margin: 0 0 5px 0;
+        }
+
+        .status {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .card.on .status {
+            color: var(--primary-accent);
+        }
+
+        /* Toggle Switch Styling */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--off-color);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-accent);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Master Control Button */
+        .master-btn {
+            margin-top: 40px;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            background-color: #e74c3c;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+
+        .master-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .master-btn:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Smart Home Control Panel</h1>
+    <p class="subtitle">Tap the switches to control your appliances.</p>
+
+    <div class="dashboard">
+        <div class="card" id="card-light">
+            <div class="icon" id="icon-light">💡</div>
+            <h2>Living Room</h2>
+            <div class="status" id="status-light">OFF</div>
+            <label class="switch">
+                <input type="checkbox" id="toggle-light" onchange="toggleDevice('light')">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="card" id="card-fan">
+            <div class="icon" id="icon-fan">🌀</div>
+            <h2>Bedroom Fan</h2>
+            <div class="status" id="status-fan">OFF</div>
+            <label class="switch">
+                <input type="checkbox" id="toggle-fan" onchange="toggleDevice('fan')">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="card" id="card-ac">
+            <div class="icon" id="icon-ac">❄️</div>
+            <h2>Air Conditioner</h2>
+            <div class="status" id="status-ac">OFF</div>
+            <label class="switch">
+                <input type="checkbox" id="toggle-ac" onchange="toggleDevice('ac')">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="card" id="card-tv">
+            <div class="icon" id="icon-tv">📺</div>
+            <h2>Smart TV</h2>
+            <div class="status" id="status-tv">OFF</div>
+            <label class="switch">
+                <input type="checkbox" id="toggle-tv" onchange="toggleDevice('tv')">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <button class="master-btn" onclick="turnAllOff()">Turn Everything OFF</button>
+
+    <script>
+        // --- JAVASCRIPT LOGIC ---
+
+        // Function to handle individual device toggles
+        function toggleDevice(deviceId) {
+            // Get the HTML elements for the specific device
+            const card = document.getElementById('card-' + deviceId);
+            const statusText = document.getElementById('status-' + deviceId);
+            const toggleInput = document.getElementById('toggle-' + deviceId);
+
+            // Check if the toggle is currently checked (ON)
+            if (toggleInput.checked) {
+                card.classList.add('on');
+                statusText.innerText = 'ON';
+            } else {
+                card.classList.remove('on');
+                statusText.innerText = 'OFF';
+            }
+        }
+
+        // Function to turn off all devices at once (Master Switch)
+        function turnAllOff() {
+            const devices = ['light', 'fan', 'ac', 'tv'];
+            
+            devices.forEach(deviceId => {
+                const card = document.getElementById('card-' + deviceId);
+                const statusText = document.getElementById('status-' + deviceId);
+                const toggleInput = document.getElementById('toggle-' + deviceId);
+
+                // Uncheck the toggle visually
+                toggleInput.checked = false;
+                
+                // Remove the 'on' styling and update text
+                card.classList.remove('on');
+                statusText.innerText = 'OFF';
+            });
+        }
+    </script>
+</body>
+</html>
