@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Performance Report</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #eef2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+
+        .report-card {
+            width: 100%;
+            max-width: 900px;
+            background-color: #ffffff;
+            padding: 35px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .report-header {
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap; /* Helps layout on smaller tablet screens */
+        }
+
+        .title-section h2 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.8rem;
+        }
+
+        .title-section p {
+            margin: 5px 0 0 0;
+            color: #7f8c8d;
+            font-size: 0.95rem;
+        }
+
+        .date-badge {
+            background-color: #ecf0f1;
+            color: #34495e;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 45vh;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="report-card">
+        <div class="report-header">
+            <div class="title-section">
+                <h2>Weekly System Performance</h2>
+                <p>Correlating hardware errors with server uptime percentage</p>
+            </div>
+            <div class="date-badge">Week 42: Current Week</div>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="weeklyReportChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('weeklyReportChart').getContext('2d');
+
+        const weeklyChart = new Chart(ctx, {
+            type: 'bar', // The foundational type of the chart
+            data: {
+                labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+                datasets: [
+                    {
+                        // The Line Overlay
+                        type: 'line', 
+                        label: 'Uptime (%)',
+                        data: [99.9, 99.8, 96.5, 98.2, 99.9, 100, 100], // Notice the dip on Wednesday
+                        borderColor: '#2ecc71', // Success Green
+                        backgroundColor: '#2ecc71',
+                        borderWidth: 3,
+                        tension: 0.3,
+                        pointRadius: 5,
+                        yAxisID: 'y-uptime' // Ties to the right axis
+                    },
+                    {
+                        // The Base Bar Chart
+                        type: 'bar',
+                        label: 'Hardware Errors Logged',
+                        data: [12, 15, 65, 32, 10, 2, 0], // The massive spike on Wednesday caused the uptime dip
+                        backgroundColor: 'rgba(52, 152, 219, 0.7)', // Professional Blue
+                        borderColor: '#3498db',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        yAxisID: 'y-errors' // Ties to the left axis
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    tooltip: {
+                        backgroundColor: 'rgba(44, 62, 80, 0.9)'
+                    }
+                },
+                scales: {
+                    // Left Axis for Error Count
+                    'y-errors': {
+                        type: 'linear',
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Total Errors Count'
+                        },
+                        beginAtZero: true
+                    },
+                    // Right Axis for Uptime Percentage
+                    'y-uptime': {
+                        type: 'linear',
+                        position: 'right',
+                        min: 90, // Locks the scale so the line stays near the top
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Uptime (%)'
+                        },
+                        grid: {
+                            drawOnChartArea: false // Prevents the grid lines from clashing with the left axis
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
