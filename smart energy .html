@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Energy Meter</title>
+    <style>
+        /* --- CSS STYLING --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .meter-container {
+            background: #1e1e2f;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+            border-top: 5px solid #00e676;
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #00e676;
+            letter-spacing: 1px;
+        }
+
+        /* Grid layout for the data blocks */
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .data-box {
+            background: #2a2a40;
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 4px solid #00e676;
+        }
+
+        /* Special styling for the total bill box to make it span both columns */
+        .data-box.bill-box {
+            grid-column: span 2;
+            background: #402a2a;
+            border-left-color: #ff3d00;
+        }
+
+        .label {
+            font-size: 12px;
+            color: #b0bec5;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .unit {
+            font-size: 14px;
+            color: #888;
+        }
+
+        /* Interactive Button */
+        button {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #121212;
+            background-color: #00e676;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button.off {
+            background-color: #ff3d00;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="meter-container">
+        <h2>LIVE ENERGY METER</h2>
+        
+        <div class="data-grid">
+            <div class="data-box">
+                <div class="label">Voltage</div>
+                <div class="value"><span id="val-voltage">230.0</span> <span class="unit">V</span></div>
+            </div>
+            
+            <div class="data-box">
+                <div class="label">Current</div>
+                <div class="value"><span id="val-current">0.00</span> <span class="unit">A</span></div>
+            </div>
+            
+            <div class="data-box">
+                <div class="label">Active Power</div>
+                <div class="value"><span id="val-power">0</span> <span class="unit">W</span></div>
+            </div>
+            
+            <div class="data-box">
+                <div class="label">Total Energy</div>
+                <div class="value"><span id="val-energy">0.000</span> <span class="unit">kWh</span></div>
+            </div>
+            
+            <div class="data-box bill-box">
+                <div class="label">Estimated Bill</div>
+                <div class="value"><span class="unit">₹</span> <span id="val-bill">0.00</span></div>
+            </div>
+        </div>
+
+        <button id="toggle-btn" onclick="toggleAppliance()">Simulate: Turn AC ON</button>
+    </div>
+
+    <script>
+        // --- JAVASCRIPT LOGIC ---
+
+        // Variables to keep track of state and totals
+        let isApplianceOn = false;
+        let totalEnergy_kWh = 0.0;
+        const costPerUnit = 8.0; // ₹8 per kWh
+        
+        // Get references to HTML elements
+        const elVoltage = document.getElementById('val-voltage');
+        const elCurrent = document.getElementById('val-current');
+        const elPower = document.getElementById('val-power');
+        const elEnergy = document.getElementById('val-energy');
+        const elBill = document.getElementById('val-bill');
+        const btnToggle = document.getElementById('toggle-btn');
+
+        // Function triggered when the button is clicked
+        function toggleAppliance() {
+            isApplianceOn = !isApplianceOn; // Flip the state
+            
+            if (isApplianceOn) {
+                btnToggle.innerText = "Simulate: Turn AC OFF";
+                btnToggle.className = "off"; // Applies red styling
+            } else {
+                btnToggle.innerText = "Simulate: Turn AC ON";
+                btnToggle.className = ""; // Reverts to green styling
+            }
+        }
+
+        // Core calculation loop (simulates sensor readings)
+        function updateMeter() {
+            // Simulate normal grid voltage fluctuating slightly between 227V and 233V
+            let voltage = 230 + (Math.random() * 6 - 3);
+            let current = 0;
+
+            // If the appliance is ON, simulate it drawing a heavy load (around 6 to 7 Amps)
+            if (isApplianceOn) {
+                current = 6.0 + (Math.random() * 1.0);
+            } else {
+                // Standby mode (drawing tiny amounts of background current)
+                current = 0.01 + (Math.random() * 0.05); 
+            }
+
+            // Power = Voltage * Current
+            let power_W = voltage * current;
+            
+            // Convert to kWh for this 1-second interval
+            // Formula: (Watts / 1000) * (1 second / 3600 seconds in an hour)
+            let energyConsumed = (power_W / 1000.0) * (1.0 / 3600.0);
+            totalEnergy_kWh += energyConsumed;
+
+            // Calculate cost
+            let billAmount = totalEnergy_kWh * costPerUnit;
+
+            // Update the HTML text on the screen
+            elVoltage.innerText = voltage.toFixed(1);
+            elCurrent.innerText = current.toFixed(2);
+            elPower.innerText = power_W.toFixed(0);
+            
+            // Showing 5 decimal places so you can watch the meter tick up in real time
+            elEnergy.innerText = totalEnergy_kWh.toFixed(5); 
+            elBill.innerText = billAmount.toFixed(4);
+        }
+
+        // Run the updateMeter function every 1000 milliseconds (1 second)
+        setInterval(updateMeter, 1000);
+    </script>
+
+</body>
+</html>
