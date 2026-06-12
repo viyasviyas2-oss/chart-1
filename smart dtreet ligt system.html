@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Street Light Simulation</title>
+    <style>
+        /* --- CSS STYLING --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.8s ease, color 0.8s ease;
+            text-align: center;
+            padding: 40px 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        /* Background themes */
+        .day-theme {
+            background-color: #87CEEB; /* Sky blue */
+            color: #333;
+        }
+        .night-theme {
+            background-color: #1a1a2e; /* Dark night */
+            color: #e0e0e0;
+        }
+
+        /* Street Light Drawing */
+        .light-fixture {
+            margin-top: 50px;
+        }
+        .bulb {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #ccc;
+            margin: 0 auto;
+            transition: all 0.5s ease;
+        }
+        .pole {
+            width: 12px;
+            height: 200px;
+            background-color: #444;
+            margin: 0 auto;
+            border-radius: 2px;
+        }
+
+        /* Bulb States */
+        .bulb.off {
+            background-color: #95a5a6;
+            box-shadow: none;
+        }
+        .bulb.dim {
+            background-color: #ffeaa7;
+            box-shadow: 0 0 15px 5px rgba(255, 234, 167, 0.4);
+        }
+        .bulb.bright {
+            background-color: #fdcb6e;
+            box-shadow: 0 0 40px 15px rgba(253, 203, 110, 0.8), 
+                        0 0 80px 30px rgba(253, 203, 110, 0.4);
+        }
+
+        /* Controls */
+        .controls {
+            margin-top: 40px;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            transition: transform 0.1s, background-color 0.3s;
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+        button:disabled {
+            background-color: #bdc3c7;
+            color: #7f8c8d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        #timeBtn {
+            background-color: #3498db;
+            color: white;
+        }
+        #motionBtn {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        /* Status Text */
+        .status {
+            margin-top: 30px;
+            font-size: 1.3em;
+            font-weight: bold;
+            padding: 15px;
+            border-radius: 8px;
+            display: inline-block;
+            background: rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="day-theme" id="scene">
+
+    <h1>Smart Street Light Dashboard</h1>
+    
+    <div class="light-fixture">
+        <div class="bulb off" id="lightBulb"></div>
+        <div class="pole"></div>
+    </div>
+
+    <div class="controls">
+        <button id="timeBtn">Simulate Night (LDR)</button>
+        <button id="motionBtn" disabled>Trigger Motion (PIR)</button>
+    </div>
+
+    <div class="status" id="statusText">Daytime: Light is OFF</div>
+
+    <script>
+        // --- JAVASCRIPT LOGIC ---
+        
+        // System State Variables
+        let isNight = false;
+        let motionTimer = null;
+
+        // DOM Elements
+        const scene = document.getElementById('scene');
+        const bulb = document.getElementById('lightBulb');
+        const timeBtn = document.getElementById('timeBtn');
+        const motionBtn = document.getElementById('motionBtn');
+        const statusText = document.getElementById('statusText');
+
+        // Function to update the UI based on state
+        function updateSystem() {
+            if (!isNight) {
+                // State 1: DAYTIME
+                scene.className = 'day-theme';
+                bulb.className = 'bulb off';
+                
+                timeBtn.innerText = 'Simulate Night (LDR)';
+                timeBtn.style.backgroundColor = '#2c3e50'; // Dark button for next action
+                
+                motionBtn.disabled = true; // No need for motion sensor during the day
+                statusText.innerText = '☀️ Daytime: Light is completely OFF to save energy.';
+            } else {
+                // State 2 & 3: NIGHTTIME
+                scene.className = 'night-theme';
+                timeBtn.innerText = 'Simulate Day (LDR)';
+                timeBtn.style.backgroundColor = '#f1c40f'; // Yellow button for next action
+                
+                motionBtn.disabled = false; // Enable motion sensor
+                
+                if (motionTimer) {
+                    // State 3: Night + Motion
+                    bulb.className = 'bulb bright';
+                    statusText.innerText = '🚶‍♂️ Nighttime + Motion: Light at 100% Brightness.';
+                } else {
+                    // State 2: Night + No Motion
+                    bulb.className = 'bulb dim';
+                    statusText.innerText = '🌙 Nighttime (Standby): Light Dimmed to 20%.';
+                }
+            }
+        }
+
+        // LDR Sensor (Day/Night) Button Event
+        timeBtn.addEventListener('click', () => {
+            isNight = !isNight;
+            
+            // If switching to day, cancel any ongoing motion
+            if (!isNight && motionTimer) {
+                clearTimeout(motionTimer);
+                motionTimer = null;
+            }
+            
+            updateSystem();
+        });
+
+        // PIR Motion Sensor Button Event
+        motionBtn.addEventListener('click', () => {
+            if (!isNight) return; // Failsafe
+            
+            // If already active, reset the timer
+            if (motionTimer) {
+                clearTimeout(motionTimer);
+            }
+            
+            // Set motion active (simulates a person walking by for 4 seconds)
+            motionTimer = setTimeout(() => {
+                motionTimer = null; // Person has passed
+                updateSystem();     // Revert to dim light
+            }, 4000);
+            
+            updateSystem(); // Update UI immediately to show full brightness
+        });
+
+        // Initialize system on load
+        updateSystem();
+    </script>
+</body>
+</html>
