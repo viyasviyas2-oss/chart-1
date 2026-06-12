@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Component Thermal Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+
+        .dashboard-panel {
+            width: 100%;
+            max-width: 850px;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            border-top: 5px solid #4361ee;
+        }
+
+        .dashboard-header {
+            text-align: left;
+            margin-bottom: 25px;
+        }
+
+        h2 {
+            margin: 0;
+            color: #2b2d42;
+            font-size: 1.5rem;
+        }
+
+        p.subtitle {
+            color: #8d99ae;
+            font-size: 0.95rem;
+            margin-top: 5px;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 45vh;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-panel">
+        <div class="dashboard-header">
+            <h2>Hardware Thermal Stress Test</h2>
+            <p class="subtitle">Comparing Idle vs. Peak Load Temperatures across main PCB components.</p>
+        </div>
+        
+        <div class="chart-wrapper">
+            <canvas id="thermalBarChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('thermalBarChart').getContext('2d');
+
+        const thermalBarChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                // The main categories along the bottom
+                labels: ['CPU Socket', 'VRM Mosfets', 'Chipset (PCH)', 'RAM Slots', 'NVMe Controller'],
+                datasets: [
+                    {
+                        label: 'Idle State (°C)',
+                        data: [35, 42, 45, 30, 38], // Temps when the system is doing nothing
+                        backgroundColor: 'rgba(67, 97, 238, 0.7)', // Cool Blue
+                        borderColor: '#4361ee',
+                        borderWidth: 1,
+                        borderRadius: 4 // Rounds the top corners of the bars
+                    },
+                    {
+                        label: 'Peak Load State (°C)',
+                        data: [85, 92, 65, 50, 72], // Temps during a heavy stress test
+                        backgroundColor: 'rgba(239, 35, 60, 0.8)', // Warning Red
+                        borderColor: '#ef233c',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { font: { weight: 'bold' } }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false, // Hovering over a category shows both Idle and Load temps simultaneously
+                        backgroundColor: 'rgba(43, 45, 66, 0.9)'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Temperature (°C)',
+                            font: { weight: 'bold' }
+                        },
+                        grid: {
+                            color: '#e9ecef', // Light grey grid lines
+                            drawBorder: false
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false // Hides vertical grid lines for a cleaner look
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
