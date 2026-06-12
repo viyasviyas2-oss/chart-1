@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Usage Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+
+        .analytics-container {
+            width: 100%;
+            max-width: 750px;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            margin: 0;
+            color: #1a1a1a;
+            font-size: 1.6rem;
+        }
+
+        p.description {
+            color: #666666;
+            font-size: 0.95rem;
+            margin-top: 5px;
+        }
+
+        .canvas-box {
+            position: relative;
+            height: 50vh;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="analytics-container">
+        <div class="header">
+            <h2>Daily Device Utilization Profile</h2>
+            <p class="description">Mapping hardware engagement across daily routine phases.</p>
+        </div>
+        
+        <div class="canvas-box">
+            <canvas id="usageRadarChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('usageRadarChart').getContext('2d');
+
+        const usageRadarChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                // The daily phases forming the points of the radar
+                labels: [
+                    'Morning Exercise', 
+                    'Transit & Commute', 
+                    'College Classes', 
+                    'Evening Study', 
+                    'Typewriting Practice'
+                ],
+                datasets: [
+                    {
+                        label: 'Tablet (OnePlus)',
+                        data: [10, 30, 85, 95, 20], // High usage during classes and evening study
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)', // Light Blue fill
+                        borderColor: '#36a2eb',
+                        pointBackgroundColor: '#36a2eb',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#36a2eb'
+                    },
+                    {
+                        label: 'Mechanical Keyboard',
+                        data: [0, 0, 15, 60, 100], // Peaks entirely during typing practice and study
+                        backgroundColor: 'rgba(153, 102, 255, 0.2)', // Light Purple fill
+                        borderColor: '#9966ff',
+                        pointBackgroundColor: '#9966ff',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#9966ff'
+                    },
+                    {
+                        label: 'Fitness Tracker',
+                        data: [100, 70, 25, 10, 5], // Peaks during early morning exercise and commute
+                        backgroundColor: 'rgba(255, 159, 64, 0.2)', // Light Orange fill
+                        borderColor: '#ff9f40',
+                        pointBackgroundColor: '#ff9f40',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#ff9f40'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            font: { size: 13 }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        callbacks: {
+                            label: function(context) {
+                                return ` ${context.dataset.label}: ${context.raw}% Active`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    r: {
+                        angleLines: {
+                            color: 'rgba(0, 0, 0, 0.1)' // The lines radiating from the center
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)' // The circular/polygonal web lines
+                        },
+                        pointLabels: {
+                            font: {
+                                size: 12,
+                                weight: 'bold'
+                            },
+                            color: '#333'
+                        },
+                        ticks: {
+                            display: false, // Hides the numbers on the web rings for a cleaner look
+                            min: 0,
+                            max: 100
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
