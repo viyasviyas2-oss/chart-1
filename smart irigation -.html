@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Irrigation IoT Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --primary-green: #2ecc71;
+            --dark-green: #27ae60;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-main: #2c3e50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .header h1 {
+            margin: 0;
+            color: var(--dark-green);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        /* Responsive grid: side-by-side on wider tablet screens */
+        @media (min-width: 600px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .chart-card {
+                grid-column: span 2; /* Chart takes full width */
+            }
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card h3 {
+            margin-top: 0;
+            font-size: 1.2rem;
+            color: #7f8c8d;
+        }
+
+        /* --- Custom Toggle Switch CSS --- */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #3498db; /* Blue for water */
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Status Text */
+        .status-text {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .status-off { color: #e74c3c; }
+        .status-on { color: #3498db; }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🌱 Smart Irrigation System</h1>
+        <p>IoT Field Node #4 - Tomato Crop</p>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card">
+            <h3>Water Pump Control</h3>
+            <label class="switch">
+                <input type="checkbox" id="pumpToggle">
+                <span class="slider"></span>
+            </label>
+            <div id="pumpStatusText" class="status-text status-off">PUMP OFF</div>
+        </div>
+
+        <div class="card">
+            <h3>Current Moisture Level</h3>
+            <div id="moistureText" style="font-size: 2.5rem; font-weight: bold; color: #2ecc71;">45%</div>
+            <p style="color: #95a5a6; margin: 5px 0 0 0;">Target: 60% - 80%</p>
+        </div>
+
+        <div class="card chart-card">
+            <h3>Soil Moisture History (Live)</h3>
+            <div class="chart-container">
+                <canvas id="moistureChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. UI Elements ---
+        const pumpToggle = document.getElementById('pumpToggle');
+        const pumpStatusText = document.getElementById('pumpStatusText');
+        const moistureText = document.getElementById('moistureText');
+        
+        // --- 2. Chart Setup ---
+        const ctx = document.getElementById('moistureChart').getContext('2d');
+        const maxPoints = 20;
+        let timeLabels = Array(maxPoints).fill('');
+        let moistureData = Array(maxPoints).fill(45); // Start at 45% moisture
+
+        const liveChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timeLabels,
+                datasets: [{
+                    label: 'Soil Moisture (%)',
+                    data: moistureData,
+                    borderColor: '#2ecc71',
+                    backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 0 }, // Snappy updates
+                scales: {
+                    y: { min: 0, max: 100, title: { display: true, text: 'Moisture %' } },
+                    x: { ticks: { display: false } }
+                }
+            }
+        });
+
+        // --- 3. IoT System Simulation Logic ---
+        let currentMoisture = 45;
+        let isPumpRunning = false;
+
+        // Listen for the user tapping the switch
+        pumpToggle.addEventListener('change', function() {
+            isPumpRunning = this.checked;
+            
+            if (isPumpRunning) {
+                pumpStatusText.textContent = "PUMP ON (IRRIGATING)";
+                pumpStatusText.className = "status-text status-on";
+                liveChart.data.datasets[0].borderColor = '#3498db'; // Change line to water blue
+                liveChart.data.datasets[0].backgroundColor = 'rgba(52, 152, 219, 0.2)';
+            } else {
+                pumpStatusText.textContent = "PUMP OFF";
+                pumpStatusText.className = "status-text status-off";
+                liveChart.data.datasets[0].borderColor = '#2ecc71'; // Back to plant green
+                liveChart.data.datasets[0].backgroundColor = 'rgba(46, 204, 113, 0.2)';
+            }
+        });
+
+        // This runs every 1 second to simulate real-time sensor data
+        setInterval(() => {
+            if (isPumpRunning) {
+                // If pump is ON, moisture goes UP rapidly
+                currentMoisture += (Math.random() * 3 + 1); 
+                if (currentMoisture > 100) currentMoisture = 100;
+            } else {
+                // If pump is OFF, moisture slowly DRIES OUT
+                currentMoisture -= (Math.random() * 1.5 + 0.1);
+                if (currentMoisture < 5) currentMoisture = 5;
+            }
+
+            // Round to 1 decimal place for realism
+            let displayMoisture = currentMoisture.toFixed(1);
+
+            // Update the large text number
+            moistureText.innerText = displayMoisture + '%';
+
+            // Change text color if it gets dangerously dry
+            if (currentMoisture < 30) {
+                moistureText.style.color = '#e74c3c'; // Red warning
+            } else {
+                moistureText.style.color = '#2ecc71'; // Normal green
+            }
+
+            // Update the Chart
+            liveChart.data.labels.push('');
+            liveChart.data.labels.shift();
+            liveChart.data.datasets[0].data.push(displayMoisture);
+            liveChart.data.datasets[0].data.shift();
+            liveChart.update();
+
+        }, 1000); // 1000ms = 1 second
+    </script>
+</body>
+</html>
