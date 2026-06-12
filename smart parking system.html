@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Parking Dashboard</title>
+    <style>
+        /* Basic styling for the page */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px;
+            color: #333;
+        }
+
+        /* Styling the main dashboard card */
+        .dashboard {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-bottom: 30px;
+            width: 400px; /* Widened slightly to fit 3 boxes */
+        }
+
+        /* Slot counter boxes */
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 10px; /* Space between boxes */
+        }
+
+        .stat-box {
+            padding: 15px 5px;
+            border-radius: 8px;
+            background: #e9ecef;
+            flex: 1; /* Makes all boxes take equal width */
+            font-size: 16px;
+        }
+
+        .stat-box span {
+            display: block;
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 5px;
+            color: #495057;
+        }
+
+        /* Color coding the numbers for better readability */
+        #available-slots { color: #28a745; } /* Green for available */
+        #occupied-slots { color: #dc3545; } /* Red for occupied */
+
+        /* Buttons for simulating sensors */
+        .controls button {
+            padding: 12px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        #btn-entry { background-color: #28a745; }
+        #btn-entry:hover { background-color: #218838; }
+        
+        #btn-exit { background-color: #dc3545; }
+        #btn-exit:hover { background-color: #c82333; }
+
+        .controls button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        #status-message {
+            color: #007bff;
+            height: 20px;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        /* Visual representation of the parking lot */
+        .parking-lot {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 500px;
+        }
+
+        .slot {
+            width: 70px;
+            height: 120px;
+            border: 3px dashed #adb5bd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #adb5bd;
+            font-size: 18px;
+            background-color: white;
+            transition: all 0.3s ease;
+        }
+
+        /* CSS class applied via JavaScript when a car enters */
+        .slot.occupied {
+            background-color: #ffc107;
+            color: #343a40;
+            border-style: solid;
+            border-color: #ffc107;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Smart Parking Dashboard</h2>
+
+    <div class="dashboard">
+        <div class="stats">
+            <div class="stat-box">
+                Total
+                <span id="total-slots">5</span>
+            </div>
+            <div class="stat-box">
+                Available
+                <span id="available-slots">5</span>
+            </div>
+            <div class="stat-box">
+                Occupied
+                <span id="occupied-slots">0</span>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="btn-entry" onclick="carEntry()">Simulate Entry</button>
+            <button id="btn-exit" onclick="carExit()">Simulate Exit</button>
+        </div>
+        <p id="status-message"></p>
+    </div>
+
+    <div class="parking-lot" id="parking-lot">
+        </div>
+
+    <script>
+        // System Configuration
+        const totalSlots = 5;
+        let availableSlots = totalSlots;
+        
+        // Array representing each parking space (false = empty, true = occupied)
+        let parkingSlots = new Array(totalSlots).fill(false); 
+
+        // Function to update the screen
+        function updateUI() {
+            // Calculate occupied slots
+            let occupiedSlots = totalSlots - availableSlots;
+
+            // Update the text on the dashboard
+            document.getElementById('available-slots').innerText = availableSlots;
+            document.getElementById('occupied-slots').innerText = occupiedSlots;
+            
+            // Disable entry button if full, disable exit button if empty
+            document.getElementById('btn-entry').disabled = (availableSlots === 0);
+            document.getElementById('btn-exit').disabled = (availableSlots === totalSlots);
+
+            // Redraw the parking slot graphics
+            const lot = document.getElementById('parking-lot');
+            lot.innerHTML = ''; // Clear current slots
+            
+            for (let i = 0; i < totalSlots; i++) {
+                const slotDiv = document.createElement('div');
+                
+                // If the slot is occupied, add the 'occupied' CSS class
+                if (parkingSlots[i]) {
+                    slotDiv.className = 'slot occupied';
+                    slotDiv.innerText = 'CAR';
+                } else {
+                    slotDiv.className = 'slot';
+                    slotDiv.innerText = 'P' + (i + 1);
+                }
+                
+                lot.appendChild(slotDiv);
+            }
+        }
+
+        // Logic for a car entering the system
+        function carEntry() {
+            if (availableSlots > 0) {
+                // Find the first empty parking slot
+                let index = parkingSlots.indexOf(false);
+                if (index !== -1) {
+                    parkingSlots[index] = true;
+                    availableSlots--;
+                    
+                    showStatusMessage("Car entered Slot " + (index + 1));
+                    updateUI();
+                }
+            }
+        }
+
+        // Logic for a car leaving the system
+        function carExit() {
+            if (availableSlots < totalSlots
